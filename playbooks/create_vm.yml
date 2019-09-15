@@ -1,0 +1,37 @@
+---
+
+- name: Create master vms
+  ec2:
+    key_name: "{{ item.value.key_name }}"
+    instance_type: "{{ item.value.instance_type }}"
+    image: "{{ item.value.image }}"
+    wait: yes
+    group: "{{ item.value.group }}"
+    count: 2
+    instance_tags:
+      Name: "{{ item.value.instance_tags_name }}"
+    vpc_subnet_id: "{{ item.value.vpc_subnet_id }}"
+    assign_public_ip: yes
+  loop: "{{ KUBERNETES_VMS | default(false) | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}" 
+  register: ec2
+
+- debug:
+   var: ec2.results[0].instances
+
+- name: Add all instance public IPs to host group
+  add_host: 
+    hostname: "{{ item.public_ip }}" 
+    groups: master
+  loop: "{{ ec2.results[0].instances }}"
+
+- name: Get the groups
+  become: true
+  group:
+    name: master
+    state: present
+
+- name: get groups
+  debug:
+   var: groups['master']

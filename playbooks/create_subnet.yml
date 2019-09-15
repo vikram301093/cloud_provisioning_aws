@@ -1,0 +1,44 @@
+---
+
+- debug:
+   var: KUBERNETES_AWS_SUBNET.subnets[AWS_REGION]
+
+- name: Create Subnet
+  ec2_vpc_subnet:
+    state: present
+    vpc_id: "{{ KUBERNETES_AWS_SUBNET.vpc_id }}"
+    cidr: "{{ item.cidr }}"
+    az: "{{ item.az }}"
+    resource_tags:
+      Name: "{{ item.name }}"
+  loop: "{{ KUBERNETES_AWS_SUBNET.subnets[AWS_REGION] }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: AWS_SUBNETS_CREATED
+
+- name: Get Subnet Facts
+  ec2_vpc_subnet_facts:
+    region: "{{ AWS_REGION | default(aws_region) }}"
+    filters:
+      "tag:Name": mastersubnet
+#  loop: "{{ KUBERNETES_AWS_SUBNET.subnets[AWS_REGION] }}"
+#  loop_control:
+#    label: "{{ item.name }}"
+  register: subnet_facts
+
+- name: Print created subnets
+  debug:
+   var: subnet_facts
+
+- name: Add subnet_id into existing dict object
+  set_fact:
+    KUBERNETES_AWS_VM: "{{ KUBERNETES_AWS_VM | combine({'master': {'vpc_subnet_id': 'item.subnet.id'}} , recursive=True) }}"
+  loop: "{{ AWS_SUBNETS_CREATED.results }}"
+#  when: KUBERNETES_AWS_VM.master.subnet_name == AWS_SUBNETS_CREATED.results[0].subnet.id
+
+
+- name: Get Subnet Id
+  debug: 
+   var: KUBERNETES_AWS_VM
+  
+  

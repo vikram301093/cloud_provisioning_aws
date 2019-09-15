@@ -1,0 +1,13 @@
+---
+
+- hosts: localhost
+  gather_facts: false
+  environment:
+   AWS_REGION: us-east-2 
+  tasks:
+   - name: Create Subnets
+     import_tasks: create_subnet.yml
+#   - name: Create Security Groups
+#     import_tasks: create_sg.yml
+#   - name: Create vms
+#     import_tasks: create_vm.yml

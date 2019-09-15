@@ -1,0 +1,12 @@
+---
+
+- name: Create Security Groups
+  ec2_group:
+    name: "{{ item.value.name }}"
+    description: "{{ item.value.description }}"
+    vpc_id: "{{ item.value.vpc_id }}"
+    region: "{{ AWS_REGION }}"
+    rules: "{{ item.value.rules if 'rules' in item.value else [] }}"
+  loop: "{{ KUBERNETES_SG | default(false) | dict2items }}"
+  loop_control: 
+    label: "{{ item.value.name }}"

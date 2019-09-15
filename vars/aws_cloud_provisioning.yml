@@ -1,0 +1,52 @@
+---
+
+AWS_REGION: &AWS_REGION us-east-2
+
+KUBERNETES_AWS_VPC_ID: vpc-ce8b7fa5
+
+KUBERNETES_AWS_SUBNET:
+  vpc_id: "{{ KUBERNETES_AWS_VPC_ID }}"
+  subnets:
+   *AWS_REGION:
+    - name: mastersubnet
+      cidr: 172.31.64.0/20
+      az: us-east-2a
+    - name: nodesubnet
+      cidr: 172.31.128.0/20
+      az: us-east-2b
+
+KUBERNETES_AWS_SG:
+ master:
+   name: master-sg
+   description: Master Security Groups
+   vpc_id: "{{ KUBERNETES_AWS_VPC_ID }}"
+   rules:
+   - proto: tcp
+     ports:
+     - 22
+     cidr_ip: 0.0.0.0/0
+     rule_desc: allow ssh 
+   - proto: tcp
+     ports:
+     - 80
+     cidr_ip: 0.0.0.0/0
+     rule_desc: allow all on port 80
+
+
+KUBERNETES_AWS_VM:
+  master:
+    key_name: masterkey
+    instance_type: t2.micro
+    image: ami-0c64dd618a49aeee8
+    group: master-sg
+    count: 1
+    instance_tags_name: master
+    subnet_name: mastersubnet
+  worker:
+    key_name: workerkey
+    instance_type: t2.micro
+    image: ami-0c64dd618a49aeee8
+    group: worker-sg
+    count: 1
+    instance_tags_name: worker
+    subnet_name: nodesubnet
